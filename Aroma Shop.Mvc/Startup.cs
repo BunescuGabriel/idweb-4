@@ -121,6 +121,9 @@ namespace Aroma_Shop.Mvc
                     name: "default",
                     pattern: "{controller=Home}/{action=Index}/{id?}");
             });
+            {
+                context.Database.EnsureCreated();
+            }
         }
 
         public static void RegisterServices(IServiceCollection service)
