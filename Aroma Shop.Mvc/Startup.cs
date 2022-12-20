@@ -42,7 +42,7 @@ namespace Aroma_Shop.Mvc
 
             services.AddDbContextPool<AppDbContext>(options =>
             {
-                options.UseSqlServer("Server=db;Database=Aroma;User Id=sa;Password=Gaby12345678;");
+                options.UseSqlServer("Server=db;Database=Aroma;User Id=sa;Password=Gaby12345678;MultipleActiveResultSets=true");
             });
 
             services.AddIdentity<CustomIdentityUser, CustomIdentityRole>(options =>
