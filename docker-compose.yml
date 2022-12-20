@@ -1,11 +1,11 @@
 version: '3'
 
 services:
-  aromashop.mvc:
+  aroma_app:
     image: gbariel/aroma:latest
     container_name: aroma_app
     ports:
-      - "5656:80"
+      - "5000:80"
     depends_on:
       - db
     volumes:
@@ -13,6 +13,7 @@ services:
   db:
     image: mcr.microsoft.com/mssql/server:2022-latest
     container_name: db
+    hostname: db
     environment:
         - ACCEPT_EULA=Y
         - MSSQL_SA_PASSWORD=Gaby12345678
