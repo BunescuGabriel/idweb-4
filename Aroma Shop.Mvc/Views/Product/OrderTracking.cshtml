@@ -1,0 +1,132 @@
+﻿@using Aroma_Shop.Application.Utilites
+
+@model Aroma_Shop.Application.ViewModels.Product.OrderTrackingViewModel
+
+@{
+    ViewData["Title"] = "رهگیری سفارش";
+}
+
+<section class="blog-banner-area" id="contact">
+    <div class="container h-100">
+        <div class="blog-banner">
+            <div class="text-center">
+                <h1>رهگیری سفارش</h1>
+                <nav aria-label="breadcrumb" class="banner-breadcrumb">
+                    <ol class="breadcrumb">
+                        <li class="breadcrumb-item"><a class="text-dark" href="/">خانه</a></li>
+                        <li class="breadcrumb-item active" aria-current="page">رهگیری سفارش</li>
+                    </ol>
+                </nav>
+            </div>
+        </div>
+    </div>
+</section>
+<section class="tracking_box_area section-margin--small">
+    <div class="container">
+        @if (Model?.Order == null)
+        {
+            <div class="tracking_box_inner">
+                <p>لطفا ایمیل و شناسه سفارش مورد نظر را در زیر وارد کنید.</p>
+                <form class="row tracking_form" asp-action="OrderTracking">
+                    <div class="col-md-12 form-group">
+                        <input type="text" class="form-control" id="order" asp-for="OrderId" placeholder="شناسه سفارش مورد نظر" onfocus="this.placeholder = ''" onblur="this.placeholder = 'شناسه سفارش مورد نظر'">
+                        <span class="text-danger field-validation-valid"></span>
+                    </div>
+                    <div class="col-md-12 form-group">
+                        <input type="email" class="form-control" id="email" asp-for="Email" placeholder="ایمیل شما" onfocus="this.placeholder = ''" onblur="this.placeholder = 'ایمیل شما'">
+                        <span class="text-danger field-validation-valid"></span>
+                    </div>
+                    <div class="col-md-12 form-group">
+                        <button type="submit" value="submit" class="button button-tracking">پیگیری سفارش</button>
+                    </div>
+                    <div class="alert alert-danger text-left mt-3 rounded-0 w-100" role="alert" asp-validation-summary="All"></div>
+                </form>
+            </div>
+        }
+        else
+        {
+            <p class="text-center text-success h5">سفارش #@Model.OrderId در تاریخ @Model.Order.CreateTime ثبت شده است و در حال حاضر در وضعیت @Model.Order.OrderStatus می باشد.</p>
+            <div class="order_details_table">
+                <div class="d-flex justify-content-between">
+                    <h2>جزئیات سفارش</h2>
+                    <i class="bi bi-printer h5"></i>
+                </div>
+                <div class="table table-responsive-lg table-responsive-sm">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th scope="col">محصول</th>
+                                <th scope="col">تعداد</th>
+                                <th scope="col">جمع قیمت</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var orderInvoiceDetails in Model.Order.OrderInvoicesDetails)
+                            {
+                                <tr>
+                                    <td class="py-2">
+                                        <p>@orderInvoiceDetails.InvoiceDetailsProductName</p>
+                                        @if (!orderInvoiceDetails.IsInvoiceDetailsProductSimple)
+                                        {
+                                            <ul class="orderconfirmation-variations">
+                                                @for (int i = 0; i < orderInvoiceDetails.InvoiceDetailsProductAttributesNames.Count; i++)
+                                                {
+                                                    <li class="text-secondary">@orderInvoiceDetails.InvoiceDetailsProductAttributesNames.ElementAtOrDefault(i) : @orderInvoiceDetails.InvoiceDetailsProductVariationValues.ElementAtOrDefault(i)</li>
+                                                }
+                                            </ul>
+                                        }
+                                    </td>
+                                    <td class="align-middle py-2">
+                                        <h5>x <span class="middle-number d-inline-block">@orderInvoiceDetails.InvoiceDetailsQuantity.ToString("D2")</span></h5>
+                                    </td>
+                                    <td class="align-middle py-2">
+                                        <p>@(orderInvoiceDetails.InvoiceDetailsTotalPrice != 0 ? $"{orderInvoiceDetails.InvoiceDetailsTotalPrice} تومان" : "رایگان")</p>
+                                    </td>
+                                </tr>
+                            }
+                            <tr>
+                                <td class="pb-4"></td>
+                                <td class="pb-4"></td>
+                                <td class="pb-4"></td>
+                            </tr>
+                            @foreach (var discount in Model.Order.Discounts)
+                            {
+                                <tr>
+                                    <td>کد تخفیف</td>
+                                    <td>@discount.DiscountCode</td>
+                                    <td>-@discount.DiscountPrice</td>
+                                </tr>
+                            }
+                            <tr>
+                                <td class="pt-5">
+                                    <h4>حمل و نقل</h4>
+                                </td>
+                                <td class="pt-5">
+                                    <h5></h5>
+                                </td>
+                                <td class="pt-5">
+                                    <p>پس کرایه</p>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <h4>جمع کل</h4>
+                                </td>
+                                <td>
+                                    <h5></h5>
+                                </td>
+                                <td>
+                                    <h4>@Model.Order.OrderTotalPrice</h4>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        }
+    </div>
+</section>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

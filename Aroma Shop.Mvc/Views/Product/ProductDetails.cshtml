@@ -1,0 +1,712 @@
+﻿@using System.Text.RegularExpressions
+@model Aroma_Shop.Application.ViewModels.Product.ProductViewModel
+@using Aroma_Shop.Application.Interfaces
+@using Aroma_Shop.Application.Utilites
+@using Aroma_Shop.Domain.Models.FileModels
+@using Microsoft.Extensions.Configuration
+@using Newtonsoft.Json
+
+@inject IAccountService AccountService
+@inject IConfiguration Configuration
+
+@{
+    ViewData["Title"] = Model.Product.ProductName;
+    var isUserSignedIn =
+        AccountService.IsUserSignedIn();
+}
+
+<section class="blog-banner-area" id="contact">
+    <div class="container h-100">
+        <div class="blog-banner">
+            <div class="text-center">
+                <h1>@Model.Product.ProductName</h1>
+                <nav aria-label="breadcrumb d-flex flex-wrap flex-column flex-sm-row" class="banner-breadcrumb">
+                    <ol class="breadcrumb d-flex flex-wrap flex-column flex-sm-row">
+                        <li class="breadcrumb-item"><a class="text-dark" asp-controller="Home" asp-action="Index">خانه</a></li>
+                        <li class="breadcrumb-item"><a class="text-dark" asp-controller="Product" asp-action="Index">محصولات</a></li>
+                        <li class="breadcrumb-item active" aria-current="page">@Model.Product.ProductName</li>
+                    </ol>
+                </nav>
+            </div>
+        </div>
+    </div>
+</section>
+<!--================Single Product Area =================-->
+<div class="product_image_area">
+    <div class="container">
+        <div class="row s_product_inner">
+            <div class="col-lg-6">
+                <div class="owl-carousel owl-theme s_Product_carousel">
+                    @if (Model.Product.Images.Any())
+                    {
+                        foreach (var productImage in Model.Product.Images)
+                        {
+                            <div class="single-prd-item">
+                                <img class="img-fluid product-image-detail" src="~/img/@productImage.ImagePath" alt="@Model.Product.ProductName">
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <div class="single-prd-item">
+                            <img class="img-fluid" src="@Image.DefaultImagePath" alt="@Model.Product.ProductName">
+                        </div>
+                    }
+                </div>
+            </div>
+            <div class="col-lg-5 offset-lg-1">
+                <div class="s_product_text">
+                    @if (Model.Product.IsSimpleProduct)
+                    {
+                        <h3>@Model.Product.ProductName</h3>
+
+                        var simpleProductPriceLabel = "";
+
+                        if (Model.Product.ProductPrice != 0 && Model.Product.ProductQuantityInStock != 0)
+                        {
+                            simpleProductPriceLabel = $"{Model.Product.ProductPrice} تومان";
+
+                        }
+                        else if (Model.Product.ProductPrice == 0 && Model.Product.ProductQuantityInStock > 0)
+                        {
+                            simpleProductPriceLabel = "رایگان";
+                        }
+                        else
+                        {
+                            simpleProductPriceLabel = "";
+                        }
+
+                        <h2>@simpleProductPriceLabel</h2>
+                        <ul class="categories-list text-secondary">
+                            <li>
+                                <span>دسته :</span>
+                                @foreach (var category in Model.Product.Categories)
+                                {
+                                    <a class="text-secondary" asp-action="Index" asp-route-SelectedCategories="@category.CategoryId">@category.CategoryName</a> <span> , </span>
+                                }
+                            </li>
+                            <li>
+                                وضعیت : @if (Model.Product.ProductQuantityInStock > 0)
+                                {
+                                    <span class='text-success font-weight-bold'>موجود</span>
+                                }
+                                else
+                                {
+                                    <span class='text-danger font-weight-bold'>ناموجود</span>
+                                }
+                            </li>
+                        </ul>
+                        <p class="mb-4">
+                            @(!string.IsNullOrEmpty(Model.Product.ProductShortDescription)? Model.Product.ProductShortDescription:"")
+                        </p>
+                        if (ViewData["OutOfStockError"] != null)
+                        {
+                            <div class="alert mt-3 rounded-0 alert-danger text-left" role="alert">موجودی کافی نیست</div>
+                        }
+                        if (Model.Product.ProductQuantityInStock > 0)
+                        {
+
+                            <div class="product_count">
+                                <label for="qty">تعداد :</label>
+                                <button id="increase-count" class="increase items-count" type="button">
+                                    <i class="ti-angle-up"></i>
+                                </button>
+                                <input type="text" value="1" class="input-text qty">
+                                <button id="decrease-count" class="reduced items-count" type="button">
+                                    <i class="ti-angle-down"></i>
+                                </button>
+                                <a id="btn-addtocart" class="button primary-btn" href="#">افزودن به سبد خرید</a>
+                            </div>
+
+                        }
+                        @if (isUserSignedIn)
+                        {
+                            var isProductInLoggedUserFavoriteProducts =
+                                await AccountService.IsProductInLoggedUserFavoriteProductsAsync(Model.Product.ProductId);
+
+                            @if (!isProductInLoggedUserFavoriteProducts)
+                            {
+                                <div class="card_area d-flex align-items-center">
+                                    <a class="icon_btn" asp-action="AddProductToUserFavoriteProducts" asp-route-favoriteProductId="@Model.Product.ProductId" data-toggle="tooltip" data-placement="top" title="افزودن به علاقه مندی ها"><i class="bi bi-heart"></i></a>
+                                </div>
+
+                            }
+                            else
+                            {
+                                <div class="card_area d-flex align-items-center">
+                                    <a class="icon_btn" asp-action="RemoveProductFromUserFavoriteProducts" asp-route-favoriteProductId="@Model.Product.ProductId" data-toggle="tooltip" data-placement="top" title="حذف از علاقه مندی ها"><i class="bi bi-heart-fill"></i></a>
+                                </div>
+                            }
+                        }
+                        else
+                        {
+                            var returnUrl =
+                                Url.Action("ProductDetails", "Product", new { productId = Model.Product.ProductId });
+                            <div class="card_area d-flex align-items-center">
+                                <a class="icon_btn" asp-controller="Account" asp-action="Login" asp-route-returnUrl="@returnUrl" data-toggle="tooltip" data-placement="top" title="افزودن به علاقه مندی ها"><i class="bi bi-heart"></i></a>
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <h3>@Model.Product.ProductName</h3>
+
+                        var productAttributePriceLabel = "";
+
+                        var doesProductHaveAFreeVariation =
+                            Model.Product
+                                .ProductVariations
+                                .Any(p => p.ProductVariationPrice == 0 && p.ProductVariationQuantityInStock > 0);
+
+                        int? minimumPrice =
+                            Model.Product
+                                .ProductVariations
+                                .Where(p => p.ProductVariationQuantityInStock != 0 && p.ProductVariationPrice != 0)
+                                .Min(p => (int?)p.ProductVariationPrice);
+
+                        int? maximumPrice =
+                            Model.Product
+                                .ProductVariations
+                                .Where(p => p.ProductVariationQuantityInStock != 0 && p.ProductVariationPrice != 0)
+                                .Max(p => (int?)p.ProductVariationPrice);
+
+                        if ((minimumPrice != null && maximumPrice != null) && minimumPrice != maximumPrice && !doesProductHaveAFreeVariation)
+                        {
+                            productAttributePriceLabel = $"{minimumPrice} تومان - {maximumPrice} تومان";
+                        }
+                        else if ((minimumPrice != null && maximumPrice != null) && minimumPrice == maximumPrice && !doesProductHaveAFreeVariation)
+                        {
+                            productAttributePriceLabel = $"{minimumPrice} تومان";
+                        }
+                        else if (minimumPrice == null && doesProductHaveAFreeVariation)
+                        {
+                            productAttributePriceLabel = $"رایگان";
+                        }
+                        else if (maximumPrice != null && doesProductHaveAFreeVariation)
+                        {
+                            productAttributePriceLabel = $"رایگان - {maximumPrice} تومان";
+                        }
+
+                        <h2 id="price-label">@productAttributePriceLabel</h2>
+                        <ul class="list">
+                            <li>
+                                <span>دسته :</span>
+                                @foreach (var category in Model.Product.Categories)
+                                {
+                                    <a class="text-secondary" asp-action="Index" asp-route-SelectedCategories="@category.CategoryId">@category.CategoryName</a> <span> , </span>
+                                }
+                            </li>
+                            <li>
+                                @{
+                                    var doesProductHaveAtLastOneAvailableVariation =
+                                        Model.Product
+                                            .ProductVariations
+                                            .Any(p => p.ProductVariationQuantityInStock != 0);
+                                }
+                                وضعیت :
+                                @if (doesProductHaveAtLastOneAvailableVariation)
+                                {
+                                    <span class='text-success font-weight-bold quantity-in-stock-label'>موجود</span>
+                                }
+                                else
+                                {
+                                    <span class='text-danger font-weight-bold quantity-in-stock-label'>ناموجود</span>
+                                }
+                            </li>
+                        </ul>
+                        <p class="mb-1 border-top border-bottom-0">
+                            @(!string.IsNullOrEmpty(Model.Product.ProductShortDescription)? Model.Product.ProductShortDescription:"")
+                        </p>
+                        if (doesProductHaveAtLastOneAvailableVariation)
+                        {
+                            <div class="mb-4 border-bottom">
+                                <div class="attributes-section">
+                                    @for (var i = 0; i < Model.Product.ProductAttributesNames.Count; i++)
+                                    {
+                                        var attributeValues =
+                                            Model.Product.ProductAttributesValues
+                                                .ElementAtOrDefault(i).Split(",");
+                                        <div class="row">
+                                            <label class="control-label pt-2 col-2">@Model.Product.ProductAttributesNames.ElementAtOrDefault(i)</label>
+                                            <select class="form-control col-lg-10 col-md-9 col-sm-8 product-attributes mx-2 mx-sm-0">
+                                                <option>لطفا انتخاب کنید</option>
+                                                @foreach (var attributeValue in attributeValues)
+                                                {
+                                                    <option>@attributeValue</option>
+                                                }
+                                            </select>
+                                        </div>
+                                        <br />
+                                    }
+                                </div>
+                                <div class="d-block text-center mb-2">
+                                    <span class="reset_variations text-dark">پاک کردن</span>
+                                </div>
+                            </div>
+                            if (ViewData["OutOfStockError"] != null)
+                            {
+                                <div class="alert mt-3 rounded-0 alert-danger text-left" role="alert">موجودی کافی نیست</div>
+                            }
+                        }
+
+                        if (doesProductHaveAtLastOneAvailableVariation)
+                        {
+                            <div class="product_count d-flex">
+                                <div id="quantity-counter-section" style="visibility: hidden;">
+                                    <label for="qty">تعداد :</label>
+                                    <button id="increase-count" class="increase items-count" type="button">
+                                        <i class="ti-angle-up"></i>
+                                    </button>
+                                    <input type="text" value="1" class="input-text qty">
+                                    <button id="decrease-count" class="reduced items-count" type="button">
+                                        <i class="ti-angle-down"></i>
+                                    </button>
+                                </div>
+                                <a id="btn-addtocart" class="button-disabled" href="#">افزودن به سبد خرید</a>
+                            </div>
+                        }
+                        @if (isUserSignedIn)
+                        {
+                            var isProductInLoggedUserFavoriteProducts =
+                                await AccountService.IsProductInLoggedUserFavoriteProductsAsync(Model.Product.ProductId);
+
+                            @if (!isProductInLoggedUserFavoriteProducts)
+                            {
+                                <div class="card_area d-flex align-items-center">
+                                    <a class="icon_btn" asp-action="AddProductToUserFavoriteProducts" asp-route-favoriteProductId="@Model.Product.ProductId" data-toggle="tooltip" data-placement="top" title="افزودن به علاقه مندی ها"><i class="bi bi-heart"></i></a>
+                                </div>
+
+                            }
+                            else
+                            {
+                                <div class="card_area d-flex align-items-center">
+                                    <a class="icon_btn" asp-action="RemoveProductFromUserFavoriteProducts" asp-route-favoriteProductId="@Model.Product.ProductId" data-toggle="tooltip" data-placement="top" title="حذف از علاقه مندی ها"><i class="bi bi-heart-fill"></i></a>
+                                </div>
+                            }
+                        }
+                        else
+                        {
+                            var returnUrl =
+                                Url.Action("ProductDetails", "Product", new { productId = Model.Product.ProductId });
+                            <div class="card_area d-flex align-items-center">
+                                <a class="icon_btn" asp-controller="Account" asp-action="Login" asp-route-returnUrl="@returnUrl" data-toggle="tooltip" data-placement="top" title="افزودن به علاقه مندی ها"><i class="bi bi-heart"></i></a>
+                            </div>
+                        }
+                    }
+                </div>
+            </div>
+            <input type="hidden" id="maximum-available-quantity" value="@Model.Product.ProductQuantityInStock" />
+            <form id="add-to-cart-form" asp-action="AddProductToCart">
+                <input type="hidden" value="@Model.Product.ProductId" name="productId" />
+                <input type="hidden" id="required-quantity" value="1" name="requestedQuantity" />
+                <input type="hidden" id="product-variation-id" value="-1" name="productVariationId" />
+            </form>
+        </div>
+    </div>
+</div>
+<!--================End Single Product Area =================-->
+<!--================Product Description Area =================-->
+<section class="product_description_area">
+    <div class="container">
+        <ul class="nav nav-tabs" id="myTab" role="tablist">
+
+            @{
+                var isProductDescriptionNotNull =
+                    !string.IsNullOrWhiteSpace(Model.Product.ProductDescription);
+
+                var isProductInformationsNotNull =
+                    Model.Product.Informations.NotNullOrEmpty();
+            }
+
+            @if (isProductDescriptionNotNull && isProductInformationsNotNull)
+            {
+                <li class="nav-item">
+                    <a class="nav-link active" id="home-tab" data-toggle="tab" href="#home" role="tab" aria-controls="home" aria-selected="true">توضیحات</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" id="profile-tab" data-toggle="tab" href="#profile" role="tab" aria-controls="profile"
+                       aria-selected="false">مشخصات</a>
+                </li>
+            }
+            else if (isProductDescriptionNotNull)
+            {
+                <li class="nav-item">
+                    <a class="nav-link active" id="home-tab" data-toggle="tab" href="#home" role="tab" aria-controls="home" aria-selected="true">توضیحات</a>
+                </li>
+            }
+            else if (isProductInformationsNotNull)
+            {
+                <li class="nav-item">
+                    <a class="nav-link active" id="profile-tab" data-toggle="tab" href="#profile" role="tab" aria-controls="profile"
+                       aria-selected="true">مشخصات</a>
+                </li>
+            }
+
+            @{
+                var isCommentSectionActive =
+                    (!isProductDescriptionNotNull && !isProductInformationsNotNull);
+            }
+
+            <li class="nav-item">
+                <a class="nav-link @(isCommentSectionActive?"active":"")" id="contact-tab" data-toggle="tab" href="#contact-section" role="tab" aria-controls="contact-section"
+                   aria-selected="@(isCommentSectionActive?"true":"false")">نظرات کاربران</a>
+            </li>
+        </ul>
+        <div class="tab-content" id="myTabContent">
+            @if (isProductDescriptionNotNull && isProductInformationsNotNull)
+            {
+                <div class="tab-pane fade active show ck-content" id="home" role="tabpanel" aria-labelledby="home-tab">
+                    @Html.Raw(Model.Product.ProductDescription)
+                </div>
+                <div class="tab-pane fade" id="profile" role="tabpanel" aria-labelledby="profile-tab">
+                    <div class="table-responsive">
+                        <table class="table">
+                            <tbody>
+                                @foreach (var information in Model.Product.Informations)
+                                {
+                                    <tr>
+                                        <td>
+                                            <h5>@information.Name</h5>
+                                        </td>
+                                        <td>
+                                            <h5>@information.Value</h5>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            }
+            else if (isProductDescriptionNotNull)
+            {
+                <div class="tab-pane fade active show ck-content" id="home" role="tabpanel" aria-labelledby="home-tab">
+                    @Html.Raw(Model.Product.ProductDescription)
+                </div>
+            }
+            else if (isProductInformationsNotNull)
+            {
+                <div class="tab-pane fade active show" id="profile" role="tabpanel" aria-labelledby="profile-tab">
+                    <div class="table-responsive">
+                        <table class="table">
+                            <tbody>
+                                @foreach (var information in Model.Product.Informations)
+                                {
+                                    <tr>
+                                        <td>
+                                            <h5>@information.Name</h5>
+                                        </td>
+                                        <td>
+                                            <h5>@information.Value</h5>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            }
+            <div class="tab-pane fade @(isCommentSectionActive?"active show":"")" id="contact-section" role="tabpanel" aria-labelledby="contact-tab">
+                <div class="row">
+                    <div class="col-lg-6">
+                        <div class="comment_list">
+                            @if (Model.Product.Comments.Any())
+                            {
+                                @foreach (var comment in Model.Product.Comments)
+                                {
+                                    <div class="review_item border border-info rounded p-2">
+                                        <div class="media">
+                                            <div class="media-body">
+                                                <h4>@comment.User.UserName</h4>
+                                                <h5 class="bg-light px-2 d-inline text-dark">@comment.SubmitTime.ToSolarWithTime()</h5>
+                                            </div>
+                                        </div>
+                                        <p>
+                                            @comment.CommentDescription
+                                        </p>
+                                        <div class="text-right mt-2 ">
+                                            <a class="reply_btn" href="#">پاسخ</a>
+                                            <input type="hidden" value="@comment.CommentId" />
+                                        </div>
+                                    </div>
+                                    if (comment.Replies.Any())
+                                    {
+                                        var commentReplies =
+                                            comment.Replies.Where(p => p.IsConfirmed)
+                                                .OrderBy(p => !p.IsAdminReplied);
+
+                                        foreach (var commentReply in commentReplies)
+                                        {
+                                            <div class="review_item border border-warning rounded p-2 ml-3">
+                                                <div class="media">
+                                                    <div class="media-body">
+                                                        <h4>
+                                                            @commentReply.User.UserName
+                                                            @if (commentReply.IsAdminReplied)
+                                                            {<span class="badge badge-danger adminReply">ادمین</span>}
+                                                        </h4>
+                                                        <h5 class="bg-light px-2 d-inline text-dark">@commentReply.SubmitTime.ToSolarWithTime()</h5>
+                                                    </div>
+                                                </div>
+                                                <p>
+                                                    @commentReply.CommentDescription
+                                                </p>
+                                            </div>
+                                        }
+                                    }
+                                }
+                            }
+                            else
+                            {
+                                <p class="alert alert-success">نظری وجود ندارد! شما اولین نفری باشید که دیدگاهتان را ثبت میکنید !</p>
+                            }
+                        </div>
+                    </div>
+                    <div class="col-lg-6 add-comment-section">
+                        @if (!isUserSignedIn)
+                        {
+                            <div class="alert alert-danger" role="alert">جهت ثبت نظر باید در سایت <a asp-controller="Account" asp-action="Register" class="alert-link">عضو</a> شوید و یا <a asp-controller="Account" asp-action="Login" asp-route-returnUrl="@Url.Action("ProductDetails", new {productId = Model.Product.ProductId})" class="alert-link">وارد</a> سایت شده باشید .</div>
+                        }
+                        else
+                        {
+                            <div class="review_box">
+                                <h4 id="commentTitle">ثبت دیدگاه</h4>
+                                <form asp-controller="Media" asp-action="AddCommentToProduct" id="comment-form">
+                                    @{
+                                        TempData["productId"] = Model.Product.ProductId;
+                                    }
+                                    <div class="form-group">
+                                        <textarea class="form-control different-control w-100" id="textarea" cols="30" rows="5" placeholder="نظر خود را وارد نمایید..." style="margin-top: 0px; margin-bottom: 0px; height: 150px;" asp-for="CommentDescription"></textarea>
+                                    </div>
+                                    <div class="form-group">
+                                        <div class="g-recaptcha" data-sitekey="@Configuration["reCAPTCHA:SiteKey"]"></div>
+                                        <span class="field-validation-error recaptcha-error" style="display: none;">لطفا تیک من ربات نیستم را بزنید</span>
+                                    </div>
+                                    <div class="form-group text-center text-md-left mt-3">
+                                        <button type="submit" class="button button--active button-review">ثبت</button>
+                                    </div>
+                                    <input type="hidden" id="parentCommentId" asp-for="ParentCommentId" />
+                                    <div asp-validation-summary="All" class="alert alert-danger" role="alert"></div>
+                                </form>
+                            </div>
+                            if (ViewData["SuccessMessage"] != null)
+                            {
+                                <div class="alert alert-primary mt-4" role="alert">@ViewData["SuccessMessage"]</div>
+                            }
+                        }
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</section>
+<!--================End Product Description Area =================-->
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+
+    <script src="https://www.google.com/recaptcha/api.js?hl=fa" async defer></script>
+    <script src="~/vendors/ckeditor5/build/ckeditor.js"></script>
+
+    <script>
+
+        $("#comment-form").on("submit",
+            function (e) {
+                if (grecaptcha.getResponse() == "") {
+                    e.preventDefault();
+                    $(".recaptcha-error").show();
+                }
+            });
+
+        var productVariationsValues = [];
+
+        @foreach (var productVariation in Model.Product.ProductVariations)
+        {
+            var productVariationId =
+                JsonConvert.SerializeObject(productVariation.ProductVariationId);
+
+            var productVariationValue =
+                JsonConvert.SerializeObject(string.Join('-', productVariation.ProductVariationValues));
+
+            var productVariationPrice =
+                JsonConvert.SerializeObject(productVariation.ProductVariationPrice);
+
+            var productVariationQuantityInStock =
+                JsonConvert.SerializeObject(productVariation.ProductVariationQuantityInStock);
+
+                <text>
+                    var productVariation =
+                    {
+                        ProductVariationId: @Html.Raw(productVariationId),
+                        ProductVariationValue:@Html.Raw(productVariationValue),
+                        ProductVariationPrice:@Html.Raw(productVariationPrice),
+                        ProductVariationQuantityInStock:@Html.Raw(productVariationQuantityInStock)
+                    };
+                </text>
+
+                @:productVariationsValues.push(productVariation);
+            }
+
+        $(document).ready(function () {
+
+            $("#btn-addtocart").click(function () {
+                var btnClass = $(this).attr('class');
+                if (btnClass !== "button-disabled") {
+                    $("#add-to-cart-form").submit();
+                }
+            });
+
+            $("#increase-count").click(function() {
+                var currentCount = parseInt($(".qty").val());
+                var requiredCount = ++currentCount;
+                $(".qty").val(requiredCount);
+                $(".qty").trigger("change");
+            });
+
+            $("#decrease-count").click(function () {
+                var currentCount = parseInt($(".qty").val());
+                if (currentCount >= 1) {
+                    var requiredCount = --currentCount;
+                    $(".qty").val(requiredCount);
+                    $(".qty").trigger("change");
+                }
+            });
+
+            $(".qty").change(function () {
+                if (parseInt($(this).val()) >= 1 && !isNaN($(this).val()) && parseInt($(this).val())<=parseInt($("#maximum-available-quantity").val())) {
+                    $("#required-quantity").val($(this).val());
+                } else if (parseInt($(this).val()) > parseInt($("#maximum-available-quantity").val())) {
+                    $(this).val($("#maximum-available-quantity").val());
+                    $("#required-quantity").val($("#maximum-available-quantity").val());
+                }
+                else {
+                    $(this).val(1);
+                    $("#required-quantity").val(1);
+                }
+            });
+
+            var firstQuantityInStockLabel = $(".quantity-in-stock-label").text();
+            var firstQuantityInStockLabelClass = firstQuantityInStockLabel === "موجود" ? "text-success" : "text-danger";
+            var firstPriceLabel = $("#price-label").text();
+
+            $(".attributes-section").children().last().remove();
+
+            $(".product-attributes").change(function() {
+                var productAttributes = $(".product-attributes").find(":selected");
+                var productAttributesValues = [];
+                for (var i = 0; i < productAttributes.length; i++) {
+                    productAttributesValues[i] = productAttributes[i].innerHTML;
+                }
+                if (!productAttributesValues.includes("لطفا انتخاب کنید")) {
+                    var requiredProductVariationValues = productAttributesValues.toString().replaceAll(",", "-").toEnglishNumbers();
+                    for (var p = 0; p < productVariationsValues.length; p++) {
+                        if (productVariationsValues[p].ProductVariationValue === requiredProductVariationValues) {
+                            //var price = productVariationsValues[p].ProductVariationPrice !== 0 ? productVariationsValues[p].ProductVariationPrice + " تومان" : "رایگان";
+                            //$("#price-label").text(price);
+                            //ConvertNumberToPersion();
+                            //alert(productVariationsValues[p].ProductVariationValue + "  ---  " + productVariationsValues[p].ProductVariationPrice + "  ---  " + productVariationsValues[p].ProductVariationQuantityInStock);
+                            var price = productVariationsValues[p].ProductVariationPrice;
+                            var quantityInStock = productVariationsValues[p].ProductVariationQuantityInStock;
+                            $("#maximum-available-quantity").val(quantityInStock);
+                            if (quantityInStock === 0) {
+                                $("#product-variation-id").val(-1);
+                                $(".product_count").css("display", "none");
+                                $(".quantity-in-stock-label").removeClass("text-success");
+                                $(".quantity-in-stock-label").addClass("text-danger");
+                                $(".quantity-in-stock-label").text("ناموجود");
+                                $("#quantity-counter-section").css("visibility", "hidden");
+                            } else {
+                                if (price !== 0) {
+
+                                    var priceLabel = price + " تومان";
+                                    $("#price-label").text(priceLabel);
+                                    setStylesForAvailableProductsAttributes();
+                                    ConvertNumberToPersion();
+
+                                } else {
+
+                                    $("#price-label").text("رایگان");
+                                    $(".product_count").css("display", "inline-block");
+                                    setStylesForAvailableProductsAttributes();
+
+                                }
+                                $("#product-variation-id").val(productVariationsValues[p].ProductVariationId);
+                            }
+                        }
+                    }
+                } else {
+                    $("#product-variation-id").val(-1);
+                    restAttributeStylesForDefault();
+                }
+                $(".qty").val(1);
+                $("#required-quantity").val(1);
+            });
+
+            $(".reset_variations").click(function () {
+                $(".qty").val(1);
+                $("#required-quantity").val(1);
+                restAttributesStyles();
+            });
+
+            function restAttributesStyles() {
+                restAttributeStylesForDefault();
+                var defaultText = "لطفا انتخاب کنید";
+                $(".product-attributes option:contains(" + defaultText + ")").prop("selected", true);
+
+            }
+
+            function restAttributeStylesForDefault() {
+                $("#price-label").text(firstPriceLabel);
+                $(".quantity-in-stock-label").text(firstQuantityInStockLabel);
+
+                if (firstQuantityInStockLabelClass === "text-success") {
+
+                    $(".quantity-in-stock-label").removeClass("text-danger");
+                    $(".quantity-in-stock-label").addClass("text-success");
+
+                } else {
+
+                    $(".quantity-in-stock-label").removeClass("text-success");
+                    $(".quantity-in-stock-label").addClass("text-danger");
+
+                }
+                $(".product_count").css("display", "inline-block");
+                $("#quantity-counter-section").css("visibility", "hidden");
+                $("#btn-addtocart").removeClass("button primary-btn");
+                $("#btn-addtocart").addClass("button-disabled");
+            }
+
+            function setStylesForAvailableProductsAttributes() {
+                $(".product_count").css("display", "inline-block");
+                $("#quantity-counter-section").css("visibility", "unset");
+                $("#btn-addtocart").removeClass("button-disabled");
+                $("#btn-addtocart").addClass("button primary-btn");
+                $(".quantity-in-stock-label").removeClass("text-danger");
+                $(".quantity-in-stock-label").addClass("text-success");
+                $(".quantity-in-stock-label").text("موجود");
+            }
+
+            $(function() {
+                $('[data-toggle="tooltip"]').tooltip();
+            });
+
+            $(".reply_btn").click(function() {
+
+                $("#parentCommentId").val($(this).next().val());
+
+                document.getElementById("commentTitle").innerText = "ثبت پاسخ";
+
+                var coordinateTop = $("textarea").offset().top - 145;
+                $("textarea").addClass("border border-danger rounded shadow-lg");
+                $("textarea").attr("placeholder", "پاسخ خود را وارد نمایید...");
+
+                $("html, body").animate({
+                        scrollTop: coordinateTop
+                    },
+                    1000);
+            });
+        });
+
+    </script>
+}

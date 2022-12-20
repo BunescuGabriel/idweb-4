@@ -1,0 +1,226 @@
+﻿@using Aroma_Shop.Domain.Models.FileModels
+@using Aroma_Shop.Application.Utilites
+@model Aroma_Shop.Domain.Models.ProductModels.Order
+
+@{
+    ViewData["Title"] = "سبد خرید";
+}
+
+<section class="blog-banner-area" id="contact">
+    <div class="container h-100">
+        <div class="blog-banner">
+            <div class="text-center">
+                <h1>سبد خرید</h1>
+                <nav aria-label="breadcrumb" class="banner-breadcrumb">
+                    <ol class="breadcrumb">
+                        <li class="breadcrumb-item"><a class="text-dark" asp-controller="Home" asp-action="Index">خانه</a></li>
+                        <li class="breadcrumb-item active" aria-current="page">سبد خرید</li>
+                    </ol>
+                </nav>
+            </div>
+        </div>
+    </div>
+</section>
+<section class="cart_area">
+    <div class="container">
+        @if (Model != null && Model.OrdersDetails.NotNullOrEmpty())
+        {
+            if (ViewData["Message"] != null)
+            {
+                <div class="alert rounded-0 alert-info text-left" role="alert">@ViewData["Message"]</div>
+            }
+            <div class="cart_inner">
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th scope="col">محصول</th>
+                                <th scope="col">قیمت</th>
+                                <th scope="col">تعداد</th>
+                                <th scope="col">جمع قیمت</th>
+                                <th scope="col"></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var orderDetails in Model.OrdersDetails)
+                            {
+                                <tr>
+                                    <td>
+                                        <div class="media">
+                                            <div class="d-flex">
+                                                @{
+                                                    var productImagePath =
+                                                        orderDetails.Product.Images.Any() ?
+                                                            $"/img/{orderDetails.Product.Images.FirstOrDefault().ImagePath}" :
+                                                            Image.DefaultImagePath;
+                                                }
+                                                <img class="shopping-cart-images" src="@productImagePath" alt="">
+                                            </div>
+                                            <div class="media-body">
+                                                <a class="text-dark" asp-action="ProductDetails" asp-route-productId="@orderDetails.Product.ProductId">@orderDetails.Product.ProductName</a>
+                                                @if (!orderDetails.IsOrderDetailsProductSimple)
+                                                {
+                                                    <ul class="mt-3 shopping-cart-variations">
+                                                        @for (int i = 0; i < orderDetails.Product.ProductAttributesNames.Count; i++)
+                                                        {
+                                                            <li>@orderDetails.Product.ProductAttributesNames.ElementAtOrDefault(i) : @orderDetails.ProductVariation.ProductVariationValues.ElementAtOrDefault(i)</li>
+                                                        }
+                                                    </ul>
+                                                }
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        @{
+                                            var orderDetailsPrice =
+                                                orderDetails.IsOrderDetailsProductSimple ?
+                                                    orderDetails.Product.ProductPrice :
+                                                    orderDetails.ProductVariation.ProductVariationPrice;
+                                        }
+                                        <h5>@(orderDetailsPrice != 0 ? orderDetailsPrice.ToString() : "رایگان")</h5>
+                                    </td>
+                                    <td>
+                                        <div class="product_count">
+                                            <input type="hidden" value="@(orderDetails.IsOrderDetailsProductSimple?orderDetails.Product.ProductQuantityInStock:orderDetails.ProductVariation.ProductVariationQuantityInStock)" />
+                                            <input type="text" id="sst" value="@orderDetails.OrderDetailsQuantity" class="input-text qty order-details-quantities">
+                                            <button class="increase items-count" type="button"><i class="lnr lnr-chevron-up"></i></button>
+                                            <button class="reduced items-count" type="button"><i class="lnr lnr-chevron-down"></i></button>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <h5>@(orderDetails.OrderDetailsTotalPrice != 0 ? orderDetails.OrderDetailsTotalPrice.ToString() : "رایگان")</h5>
+                                    </td>
+                                    <td class="text-center">
+                                        <form asp-action="RemoveProductFormCart">
+                                            <input type="hidden" name="orderDetailsId" value="@orderDetails.OrderDetailsId" />
+                                            <input class="h5 text-danger remove-orderdetails-button" type="submit" value="×" />
+                                        </form>
+                                    </td>
+                                </tr>
+                            }
+                            <tr class="bottom_button">
+                                <td>
+                                    <div id="cupon-section" class="cupon_text d-flex align-items-center">
+                                        <form asp-action="ApplyDiscountOnCart">
+                                            <input type="text" placeholder="کد تخفیف" dir="ltr" name="discountCode">
+                                            <button class="primary-btn border-0 mt-2 mt-sm-0">اعمال</button>
+                                        </form>
+                                    </div>
+                                </td>
+                                <td>
+                                </td>
+                                <td>
+                                </td>
+                                <td>
+                                </td>
+                                <td>
+                                    <form id="update-cart-form" asp-action="UpdateCart">
+                                        <button type="button" class="button update-cart-button">به روزرسانی سبد</button>
+                                    </form>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    @if (Model?.Discounts != null)
+                                    {
+                                        <table>
+                                            @foreach (var discount in Model.Discounts)
+                                            {
+                                                <tr><td class="border-0 pt-1 pb-1 pr-2">کد تخفیف @discount.DiscountCode :</td><td class="border-0 pt-1 pb-1 pl-2">-@discount.DiscountPrice تومان</td></tr>
+                                            }
+                                        </table>
+                                    }
+                                    @{
+                                        var totalOrderPrice =
+                                            @Model?.OrdersDetails.Sum(p => p.OrderDetailsTotalPrice) -
+                                            @Model?.Discounts.Sum(p => p.DiscountPrice);
+                                    }
+                                    <h4 class="mt-4">قیمت کل : <span class="ml-5">@(totalOrderPrice>0 ? $"{totalOrderPrice} تومان" : "رایگان")</span></h4>
+                                </td>
+                                <td>
+                                </td>
+                                <td>
+                                </td>
+                                <td>
+                                </td>
+                                <td>
+                                </td>
+                            </tr>
+                            <tr class="out_button_area">
+                                <td class="d-none-l">
+                                    <div class="checkout_btn_inner d-flex align-items-center">
+                                        <a class="gray_btn" asp-controller="Home" asp-action="Index">ادامه خرید</a>
+                                        <form id="proceed-to-checkout-form" asp-action="ProceedToCheckout">
+                                            <button type="button" class="primary-btn ml-2 border-0 proceed-to-checkout-button">اقدام به پرداخت</button>
+                                        </form>
+                                    </div>
+                                </td>
+                                <td>
+                                </td>
+                                <td>
+                                </td>
+                                <td>
+                                </td>
+                                <td>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        }
+        else
+        {
+            <div class="alert rounded-0 alert-danger text-left" role="alert">سبد خرید شما خالیست</div>
+        }
+    </div>
+</section>
+
+@section Scripts
+{
+    <script>
+        $(".increase").click(function () {
+            if (parseInt($(this).prev().val()) < parseInt($(this).prev().prev().val())) {
+                $(this).prev().val(parseInt($(this).prev().val()) + 1);
+            }
+        });
+
+        $(".reduced").click(function () {
+            if (parseInt($(this).prev().prev().val()) > 1) {
+                $(this).prev().prev().val(parseInt($(this).prev().prev().val()) - 1);
+            }
+        });
+
+        $(".qty").change(function () {
+            var thisValue = $(this).val();
+            var maxQuantity = parseInt($(this).prev().val());
+
+            if (parseInt(thisValue) < 1 || isNaN(thisValue)) {
+                $(this).val(1);
+            }
+            else if (parseInt(thisValue) > maxQuantity) {
+                $(this).val(maxQuantity);
+            }
+        });
+
+        $(".update-cart-button").click(function () {
+            var quantities = $(".order-details-quantities");
+
+            for (var i = 0; i < quantities.length; i++) {
+                $("<input type='hidden' name='orderDetailsQuantities' value='" + $(quantities[i]).val() + "' />").insertBefore(this);
+            }
+
+            $("#update-cart-form").submit();
+        });
+
+        $(".proceed-to-checkout-button").click(function () {
+            var quantities = $(".order-details-quantities");
+
+            for (var i = 0; i < quantities.length; i++) {
+                $("<input type='hidden' name='orderDetailsQuantities' value='" + $(quantities[i]).val() + "' />").insertBefore(this);
+            }
+
+            $("#proceed-to-checkout-form").submit();
+        });
+    </script>
+}

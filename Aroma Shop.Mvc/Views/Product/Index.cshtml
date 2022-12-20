@@ -1,0 +1,366 @@
+﻿@using Aroma_Shop.Application.Interfaces
+@using Aroma_Shop.Domain.Models.FileModels
+
+@model Aroma_Shop.Application.ViewModels.Product.ProductsViewModel
+
+@{
+    ViewData["Title"] = "محصولات";
+
+    var isModelNotEmpty =
+        !Convert.ToBoolean(ViewData["isEmpty"]);
+
+    var isUserSignIn =
+        AccountService.IsUserSignedIn();
+}
+
+@inject IAccountService AccountService
+
+@section Styles
+{
+    <style>
+
+        span:focus {
+            box-shadow: none;
+            outline: none;
+        }
+
+        .value {
+            display: none;
+        }
+
+        .price-range-both.value {
+            width: 100px;
+            margin: 0 0 0 -50px;
+            top: 26px;
+        }
+
+        .price-range-both {
+            display: none;
+        }
+
+        .value i {
+            font-style: normal;
+        }
+
+        .ui-state-default, .ui-widget-content .ui-state-default, .ui-widget-header .ui-state-default {
+            border-radius: 13px;
+            background: rgb(56, 74, 235) !important
+        }
+    </style>
+}
+
+<!-- ================ start banner area ================= -->
+<section class="blog-banner-area" id="contact">
+    <div class="container h-100">
+        <div class="blog-banner">
+            <div class="text-center">
+                <h1>محصولات</h1>
+                <nav aria-label="breadcrumb" class="banner-breadcrumb">
+                    <ol class="breadcrumb">
+                        <li class="breadcrumb-item"><a class="text-dark" asp-controller="Home" asp-action="Index">خانه</a></li>
+                        <li class="breadcrumb-item active" aria-current="page">محصولات</li>
+                    </ol>
+                </nav>
+            </div>
+        </div>
+    </div>
+</section>
+<!-- ================ end banner area ================= -->
+<!-- ================ category section start ================= -->
+<section class="section-margin--small mb-5">
+    <div class="container">
+        <form asp-action="Index" method="get">
+            <div class="row">
+                <div class="col-xl-3 col-lg-4 col-md-5">
+                    <div class="sidebar-categories">
+                        <div class="head">دسته بندی ها</div>
+                        <ul class="main-categories">
+                            <li class="common-filter">
+                                <ul>
+                                    @{
+                                        var availableCategoriesTreeViews =
+                                            Model
+                                                .CategoriesTreeViews
+                                                .Where(p => p.CategoryProductsCount > 0);
+                                    }
+
+                                    @foreach (var categoryTreeView in availableCategoriesTreeViews)
+                                    {
+                                        <li class="filter-list mb-1" style="margin-right: @(categoryTreeView.CategoryLevel * 15)px"><input class="pixel-radio" type="checkbox" id="@categoryTreeView.CategoryName" name="SelectedCategories" value="@categoryTreeView.CategoryId" @(Model.SelectedCategories.Any(p => p == categoryTreeView.CategoryId) ? "checked" : "")><label class="ml-2" for="@categoryTreeView.CategoryName">@categoryTreeView.CategoryName<span> (@categoryTreeView.CategoryProductsCount)</span></label></li>
+                                    }
+                                </ul>
+                            </li>
+                            <li class="border-top form-group mt-2">
+                                <label class="control-label mb-3">قیمت</label>
+                                <div id="slider" class="form-control"></div>
+                                <p class="text-center mt-3">از <span class="min-price text-danger"></span> تومان تا <span class="max-price text-danger"></span> تومان</p>
+                            </li>
+                            <li class="p-2">
+                                <button id="price-range-button" class="btn btn-block btn-success rounded-0">اعمال محدوده قیمت</button>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="col-xl-9 col-lg-8 col-md-7">
+                    <!-- Start Filter Bar -->
+                    <div class="filter-bar d-flex flex-wrap align-items-center">
+                        <div class="mr-auto mt-3 mb-2 sort-product-section">
+                            <select class="form-control" asp-items="Model.SortList" asp-for="SortBy">
+                            </select>
+                        </div>
+                        <div class="filter-bar-search-section">
+                            <div class="input-group filter-bar-search w-100">
+                                <input type="text" placeholder="جستجو..." class="pl-2" name="Search" value="@ViewData["search"]">
+                                <div class="input-group-append">
+                                    <button type="submit"><i class="ti-search"></i></button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- End Filter Bar -->
+                    <!-- Start Best Seller -->
+                    @if (isModelNotEmpty)
+                    {
+                        <section class="lattest-product-area pb-40 category-list">
+                            <div class="row">
+                                @foreach (var product in @Model.Products)
+                                {
+                                    string productImagePath;
+                                    if (product.Images.Any())
+                                    {
+                                        productImagePath = $"/img/{product.Images.FirstOrDefault().ImagePath}";
+                                    }
+                                    else
+                                    {
+                                        productImagePath = Image.DefaultImagePath;
+                                    }
+                                    <div class="col">
+                                        <div class="card text-center card-product">
+                                            <div class="card-product__img">
+                                                <img class="card-img product-images-card" src="@productImagePath" alt="">
+                                                <ul class="card-product__imgOverlay">
+                                                    <li><a asp-controller="Product" asp-action="ProductDetails" asp-route-productId="@product.ProductId"><i class="bi bi-search"></i></a></li>
+                                                    @if (isUserSignIn)
+                                                    {
+                                                        if (!await AccountService.IsProductInLoggedUserFavoriteProductsAsync(product.ProductId))
+                                                        {
+                                                            <li><a asp-controller="Product" asp-action="AddProductToUserFavoriteProducts" asp-route-favoriteProductId="@product.ProductId"><i class="ti-heart"></i></a></li>
+                                                        }
+                                                        else
+                                                        {
+                                                            <li><a asp-controller="Product" asp-action="RemoveProductFromUserFavoriteProducts" asp-route-favoriteProductId="@product.ProductId"><i class="bi bi-heart-fill"></i></a></li>
+                                                        }
+                                                    }
+                                                </ul>
+                                            </div>
+                                            <div class="card-body">
+                                                @{
+                                                    var lastCategory =
+                                                        product.Categories
+                                                            .LastOrDefault();
+                                                }
+                                                @if (lastCategory != null)
+                                                {
+                                                    <a class="text-dark" asp-controller="Product" asp-action="Index" asp-route-SelectedCategories="@lastCategory.CategoryId">@lastCategory.CategoryName</a>
+                                                }
+                                                <h4 class="card-product__title"><a asp-controller="Product" asp-action="ProductDetails" asp-route-productId="@product.ProductId">@product.ProductName</a></h4>
+
+                                                @if (product.IsSimpleProduct)
+                                                {
+                                                    var simpleProductPriceLabel = "";
+
+                                                    if (product.ProductPrice != 0 && product.ProductQuantityInStock != 0)
+                                                    {
+                                                        simpleProductPriceLabel = $"{product.ProductPrice} تومان";
+
+                                                    }
+                                                    else if (product.ProductPrice == 0 && product.ProductQuantityInStock > 0)
+                                                    {
+                                                        simpleProductPriceLabel = "رایگان";
+                                                    }
+                                                    else
+                                                    {
+                                                        simpleProductPriceLabel = "";
+                                                    }
+
+                                                    <p class="card-product__price">@simpleProductPriceLabel</p>
+                                                }
+                                                else
+                                                {
+                                                    var productAttributePriceLabel = "";
+
+                                                    var doesProductHaveAFreeVariation =
+                                                        product
+                                                            .ProductVariations
+                                                            .Any(p => p.ProductVariationPrice == 0 && p.ProductVariationQuantityInStock > 0);
+
+                                                    int? minimumPrice =
+                                                        product
+                                                            .ProductVariations
+                                                            .Where(p => p.ProductVariationQuantityInStock != 0 && p.ProductVariationPrice != 0)
+                                                            .Min(p => (int?)p.ProductVariationPrice);
+
+                                                    int? maximumPrice =
+                                                        product
+                                                            .ProductVariations
+                                                            .Where(p => p.ProductVariationQuantityInStock != 0 && p.ProductVariationPrice != 0)
+                                                            .Max(p => (int?)p.ProductVariationPrice);
+
+                                                    if ((minimumPrice != null && maximumPrice != null) && minimumPrice != maximumPrice && !doesProductHaveAFreeVariation)
+                                                    {
+                                                        productAttributePriceLabel = $"{minimumPrice} تومان - {maximumPrice} تومان";
+                                                    }
+                                                    else if ((minimumPrice != null && maximumPrice != null) && minimumPrice == maximumPrice && !doesProductHaveAFreeVariation)
+                                                    {
+                                                        productAttributePriceLabel = $"{minimumPrice} تومان";
+                                                    }
+                                                    else if (minimumPrice == null && doesProductHaveAFreeVariation)
+                                                    {
+                                                        productAttributePriceLabel = $"رایگان";
+                                                    }
+                                                    else if (maximumPrice != null && doesProductHaveAFreeVariation)
+                                                    {
+                                                        productAttributePriceLabel = $"رایگان - {maximumPrice} تومان";
+                                                    }
+
+                                                    <p class="card-product__price">@productAttributePriceLabel</p>
+                                                }
+                                            </div>
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                        </section>
+                        <nav class="mt-2 mb-5">
+                            <ul class="pagination justify-content-center">
+                                <li class="page-item @(ViewData["pageNumber"].ToString() == ViewData["firstPage"].ToString() ? "disabled" : "")">
+                                    <button class="page-link" value="@ViewData["firstPage"]">ابتدا</button>
+                                </li>
+                                @for (int i = Convert.ToInt32(ViewData["firstPage"]); i <= Convert.ToInt32(ViewData["lastPage"]); i++)
+                                {
+                                    <li class="page-item @(ViewData["pageNumber"].ToString() == i.ToString() ? "active" : "")">
+                                        <button class="page-link" value="@i">@i</button>
+                                    </li>
+                                }
+                                <li class="page-item @(ViewData["pageNumber"].ToString()  == ViewData["lastPage"].ToString() ? "disabled" : "")">
+                                    <button class="page-link" value="@ViewData["lastPage"]">انتها</button>
+                                </li>
+                            </ul>
+                        </nav>
+                    }
+                    else
+                    {
+                        <div class="alert rounded-0 alert-danger text-left" role="alert">محصولی یافت نشد</div>
+                    }
+                    <!-- End Best Seller -->
+                </div>
+            </div>
+            <input id="minimum-price" type="hidden" name="minimumPrice" value="@ViewData["minimumPrice"]" />
+            <input id="maximum-price" type="hidden" name="maximumPrice" value="@ViewData["maximumPrice"]" />
+            <input id="page-number-input" type="hidden" name="pageNumber" />
+        </form>
+    </div>
+</section>
+<!-- ================ category section end ================= -->
+
+@section Scripts
+{
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jqueryui-touch-punch/0.2.3/jquery.ui.touch-punch.min.js" integrity="sha512-0bEtK0USNd96MnO4XhH8jhv3nyRF0eK87pJke6pkYf3cM0uDIhNJy9ltuzqgypoIFXw3JSuiy04tVk4AjpZdZw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
+    <script>
+
+        $(document).ready(function() {
+            $(".page-link").click(function () {
+                $("#page-number-input").val($(this).val());
+                $("form").submit();
+            });
+
+            $("#price-range-button").click(function () {
+                $("form").submit();
+            });
+
+            $("select").change(function() {
+                $("form").submit();
+            });
+
+            $("input[type=checkbox]").change(function() {
+                $("form").submit();
+            });
+        });
+
+        function minimumOrMaximumValuesChanged() {
+            $("form").submit();
+        }
+
+        @{
+            int productsMinimumPrice = 0;
+
+            int productsMaximumPrice = 0;
+
+            if (isModelNotEmpty)
+            {
+                var currentProducts =
+                    Model
+                        .Products;
+
+                productsMinimumPrice =
+                    currentProducts
+                        .Min(p =>
+                            p.IsSimpleProduct ? p.ProductPrice : p.ProductVariations
+                                .Min(t => t.ProductVariationPrice));
+
+                productsMaximumPrice =
+                    currentProducts
+                        .Max(p =>
+                            p.IsSimpleProduct ? p.ProductPrice : p.ProductVariations
+                                .Max(t => t.ProductVariationPrice));
+            }
+        }
+
+        function collision($div1, $div2) {
+            var x1 = $div1.offset().left;
+            var w1 = 40;
+            var r1 = x1 + w1;
+            var x2 = $div2.offset().left;
+            var w2 = 40;
+            var r2 = x2 + w2;
+
+            if (r1 < x2 || x1 > r2) return false;
+            return true;
+
+        }
+
+        $('#slider').slider({
+            range: true,
+            min: 0,
+            max: @productsMaximumPrice,
+            values: [@ViewData["minimumPrice"], @(ViewData["maximumPrice"].ToString() == 0.ToString()? productsMaximumPrice: ViewData["maximumPrice"])],
+            slide: function (event, ui) {
+
+                $('.ui-slider-handle:eq(0) .price-range-min').html(ui.values[0] + 'تومان');
+                $('.ui-slider-handle:eq(1) .price-range-max').html(ui.values[1] + 'تومان');
+                $('.price-range-both').html('<i>' + ui.values[0] + 'تومان - </i>' + ui.values[1] + 'تومان');
+
+                $(".min-price").text(ui.values[0]);
+                $(".max-price").text(ui.values[1]);
+
+                $("#minimum-price").val(ui.values[0]);
+                $("#maximum-price").val(ui.values[1]);
+
+                ConvertNumberToPersion();
+            }
+        });
+
+        $('.ui-slider-range').append('<span class="price-range-both value"><i> تومان' + $('#slider').slider('values', 0) + ' - </i>' + $('#slider').slider('values', 1) + '</span>');
+
+        $('.ui-slider-handle:eq(0)').append('<span class="price-range-min value">' + $('#slider').slider('values', 0) + 'تومان</span>');
+
+        $('.ui-slider-handle:eq(1)').append('<span class="price-range-max value">' + $('#slider').slider('values', 1) + 'تومان</span>');
+
+        $(".min-price").text($('#slider').slider('values', 0));
+        $(".max-price").text($('#slider').slider('values', 1));
+
+    </script>
+}

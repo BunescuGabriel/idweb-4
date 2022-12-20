@@ -1,0 +1,79 @@
+﻿@using Aroma_Shop.Application.Utilites
+@model IEnumerable<Aroma_Shop.Domain.Models.MediaModels.Message>
+
+@{
+    ViewData["Title"] = "صندوق پیام ها";
+}
+
+<div class="h2 mt-3">
+    <h1 class="h2 d-inline">صندوق پیام ها</h1>
+</div>
+<hr />
+<form asp-action="Messages" method="get">
+    <div class="input-group mb-4">
+        <input name="search" type="text" value="@ViewData["search"]" class="form-control" placeholder="جستجو..." aria-label="جستجو...">
+        <button type="submit" class="input-group-text" id="search-textbox">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-search" viewBox="0 0 16 16">
+                <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z"></path>
+            </svg>
+        </button>
+    </div>
+</form>
+@if (!Convert.ToBoolean(ViewData["isEmpty"]))
+{
+    <table class="table table-responsive-lg table-responsive-sm table-bordered text-center table-light">
+        <thead>
+            <tr>
+                <th class="cart-item-cells">عنوان</th>
+                <th class="cart-item-cells">از طرف</th>
+                <th class="cart-item-cells">تاریخ</th>
+                <th class="cart-item-cells">عملیات</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var message in Model)
+            {
+                <tr class="@(message.IsRead==false?"isunread":"")">
+                    <td class="cart-item-cells align-middle">@message.MessageSubject</td>
+                    <td class="cart-item-cells align-middle">@message.MessageSenderName | @message.MessageSenderEmail</td>
+                    <td class="cart-item-cells align-middle">@message.SubmitTime.ToSolarWithTime()</td>
+                    <td class="align-middle">
+                        <div class="admin-products-actions">
+                            <a class="btn text-light btn-primary m-3" asp-action="MessageDetails" asp-route-messageId="@message.MessageId">نمایش</a>
+                            <button class="btn text-light btn-primary" data-toggle="modal" data-target="#deletemodal@(message.MessageId)">حذف</button>
+                            <div class="modal fade" id="deletemodal@(message.MessageId)" tabindex="-1" role="dialog" aria-labelledby="#deletemodal@(message.MessageId)" aria-hidden="true">
+                                <div class="modal-dialog" role="document">
+                                    <div class="modal-content">
+                                        <div class="modal-header justify-content-center">
+                                            <h5 class="modal-title text-center" id="deletemodalLabel">حذف پیام</h5>
+                                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                                <span aria-hidden="true">&times;</span>
+                                            </button>
+                                        </div>
+                                        <div class="modal-body">
+                                            <h1 class="text-info">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="35%" height="auto" fill="currentColor" class="bi bi-x" viewBox="0 0 16 16">
+                                                    <path class="text-danger" d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708z" />
+                                                </svg>
+                                            </h1>
+                                            <p class="lead">آیا از حذف پیام با عنوان <span class="text-warning">@message.MessageSubject</span> مطمئن هستید ؟</p>
+                                        </div>
+                                        <div class="modal-footer justify-content-center">
+                                            <a type="button" class="btn btn-danger" asp-action="DeleteMessage" asp-route-messageId="@message.MessageId">حذف</a>
+                                            <button type="button" class="btn btn-secondary" data-dismiss="modal">انصراف</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+    @await Html.PartialAsync("PartialPaging", "Messages")
+}
+else
+{
+    <div class="alert alert-danger text-left" role="alert">پیامی برای نمایش وجود ندارد</div>
+}

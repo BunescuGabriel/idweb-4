@@ -1,0 +1,22 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <RootNamespace>Aroma_Shop.Application</RootNamespace>
+    <PackageId>AromaShop.Application</PackageId>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <Optimize>false</Optimize>
+    <DebugType>full</DebugType>
+    <DebugSymbols>true</DebugSymbols>
+  </PropertyGroup>
+
+  <ItemGroup>
+	  <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="3.1.12" />
+	  <PackageReference Include="Microsoft.AspNetCore.Authentication.Google" Version="3.1.12" />
+	  <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
+	  <ProjectReference Include="..\Aroma Shop.Domain\Aroma Shop.Domain.csproj" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,144 @@
+﻿@model Aroma_Shop.Application.ViewModels.AdminArea.AdminDashbordViewModel
+
+@{
+    ViewData["Title"] = "خانه";
+}
+
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">پیشخوان</h1>
+</div>
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-lg col-sm-12 d-flex flex-wrap justify-content-between align-items-center dashbord-content-boxes">
+            <p>@Model.UsersCount <br /> کاربر</p>
+            <i class="bi bi-people"></i>
+        </div>
+        <div class="col-lg col-sm-12 d-flex flex-wrap justify-content-between align-items-center dashbord-content-boxes">
+            <p>@Model.ProductsCount <br /> محصول</p>
+            <i class="bi bi-gift"></i>
+        </div>
+        <div class="col-lg col-sm-12 d-flex flex-wrap justify-content-between align-items-center dashbord-content-boxes">
+            <p>@Model.CompletedOrdersCount <br /> سفارش</p>
+            <i class="bi bi-gem"></i>
+        </div>
+        <div class="col-lg col-sm-12 d-flex flex-wrap justify-content-between align-items-center dashbord-content-boxes">
+            <p>@Model.MessagesCount <br /> پیام</p>
+            <i class="bi bi-chat-text"></i>
+        </div>
+        <div class="col-lg col-sm-12 d-flex flex-wrap justify-content-between align-items-center dashbord-content-boxes">
+            <p>@Model.NumberOfVisits <br /> بازدید</p>
+            <i class="bi bi-tv"></i>
+        </div>
+    </div>
+
+    <div class="row dashbord-orderStatus-comments mb-5">
+        <div class="col mt-3 p-4 bg-light">
+            <h5 class="text-left"><i class="bi bi-pie-chart mr-2 dashbord-icons"></i> وضعیت سفارشات</h5>
+            <hr />
+            <div>
+                <canvas id="ordersChart"></canvas>
+            </div>
+        </div>
+        <div class="col mt-3 p-4 bg-light ml-lg-0 ml-xl-3">
+            <div>
+                <h5 class="text-left"><i class="bi bi-chat-left-text mr-2 dashbord-icons"></i> آخرین دیدگاه ها</h5>
+                <hr />
+                <div class="d-flex flex-column">
+                    @{
+                        var comments =
+                            Model
+                                .Comments
+                                .Take(4);
+                    }
+                    @foreach (var comment in comments)
+                    {
+                        <div class="p-3 border-bottom">
+                            <p class="text-left h6"><span class="text-danger">@("@")</span>@comment.User.UserName</p>
+                            <p class="text-left mt-1">@comment.CommentDescription</p>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts
+{
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <script>
+
+        window.onload = function () {
+
+            const data = {
+                labels: ['تکمیل شده', 'در انتظار پرداخت'],
+                datasets: [
+                    {
+                        data: [@Model.CompletedOrdersCount, @Model.UnCompletedOrdersCount],
+                        backgroundColor: ['#28a745', '#ee335e']
+                    }
+                ]
+            };
+
+            const config = {
+                type: 'pie',
+                data: data,
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                            labels: {
+                                font: {
+                                    family: "'Samim', sans-serif",
+                                    size: 16
+                                }
+                            }
+                        },
+                        //title: {
+                        //    display: true,
+                        //    text: 'سفارشات',
+                        //    font: {
+                        //        family: "'Samim', sans-serif",
+                        //        size: 20
+                        //    }
+                        //},
+                        tooltip: {
+                            displayColors: false,
+                            bodyFont: {
+                                family: "'Samim', sans-serif"
+                            }
+                        }
+                    }
+                }
+            };
+
+            var ordersChart = new Chart(document.getElementById('ordersChart'),
+                config);
+
+            $(".dashbord-content-boxes:nth-child(1)").click(function() {
+                window.location.href = "@Url.Action("Index","User")";
+            });
+
+            $(".dashbord-content-boxes:nth-child(2)").click(function() {
+                window.location.href = "@Url.Action("Index","Product")";
+            });
+
+            $(".dashbord-content-boxes:nth-child(3)").click(function() {
+                window.location.href = "@Url.Action("Index","Order")";
+            });
+
+            $(".dashbord-content-boxes:nth-child(4)").click(function() {
+                window.location.href = "@Url.Action("Messages","Media")";
+            });
+
+            $(".dashbord-content-boxes:nth-child(5)").click(function() {
+                window.location.href = "@Url.Action("Visitors","Report")";
+            });
+
+        }
+
+    </script>
+}

@@ -1,0 +1,142 @@
+﻿@using Microsoft.Extensions.Configuration
+@model Aroma_Shop.Domain.Models.MediaModels.Message
+
+@{
+    ViewData["Title"] = "تماس با ما";
+}
+
+@inject IConfiguration Configuration
+
+<!-- ================ start banner area ================= -->
+<section class="blog-banner-area" id="contact">
+    <div class="container h-100">
+        <div class="blog-banner">
+            <div class="text-center">
+                <h1>تماس با ما</h1>
+                <nav aria-label="breadcrumb" class="banner-breadcrumb">
+                    <ol class="breadcrumb">
+                        <li class="breadcrumb-item"><a class="text-dark" asp-controller="Home" asp-action="Index">خانه</a></li>
+                        <li class="breadcrumb-item active" aria-current="page">تماس با ما</li>
+                    </ol>
+                </nav>
+            </div>
+        </div>
+    </div>
+</section>
+<!-- ================ end banner area ================= -->
+<!-- ================ contact section start ================= -->
+<section class="section-margin--small">
+    <div class="container">
+        <div class="d-none d-sm-block mb-5 pb-4">
+            <div id="map" style="height: 420px;"></div>
+            <script>
+                function initMap() {
+                    var uluru = { lat: -25.363, lng: 131.044 };
+                    var grayStyles = [
+                        {
+                            featureType: "all",
+                            stylers: [
+                                { saturation: -90 },
+                                { lightness: 50 }
+                            ]
+                        },
+                        { elementType: 'labels.text.fill', stylers: [{ color: '#A3A3A3' }] }
+                    ];
+                    var map = new google.maps.Map(document.getElementById('map'), {
+                        center: { lat: -31.197, lng: 150.744 },
+                        zoom: 9,
+                        styles: grayStyles,
+                        scrollwheel: false
+                    });
+                }</script>
+            <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDpfS1oRGreGSBU5HHjMmQ3o5NLw7VdJ6I&callback=initMap"></script>
+
+        </div>
+
+
+        <div class="row">
+            <div class="col-md-5 col-lg-4 mb-4 mb-md-0">
+                <div class="media contact-info">
+                    <span class="contact-info__icon"><i class="ti-home"></i></span>
+                    <div class="media-body">
+                        <h3>ایران ، مشهد</h3>
+                        <p>بلوار دانشجو</p>
+                    </div>
+                </div>
+                <div class="media contact-info">
+                    <span class="contact-info__icon"><i class="ti-headphone"></i></span>
+                    <div class="media-body">
+                        <h3><a href="tel:00989392062773">۰۹۳۹۲۰۶۲۷۷۳</a></h3>
+                        <p>دوشنبه تا چهارشنبه ساعت 9 صبح تا 10 شب</p>
+                    </div>
+                </div>
+                <div class="media contact-info">
+                    <span class="contact-info__icon"><i class="ti-email"></i></span>
+                    <div class="media-body">
+                        <h3><a href="mailto:amirhosseinmp02@gmail.com">amirhosseinmp02@gmail.com</a></h3>
+                        <p>در هر زمانی ایمیلتان را ارسال کنید.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-7 col-lg-8">
+                <form asp-action="ContactUs" class="form-contact contact_form" id="contactForm">
+                    <div class="row">
+                        <div class="col-lg-5">
+                            <div class="form-group">
+                                <input asp-for="MessageSenderName" class="form-control" id="name" type="text" placeholder="نام خود را وارد نمایید">
+                                <span asp-validation-for="MessageSenderName"></span>
+                            </div>
+                            <div class="form-group">
+                                <input asp-for="MessageSenderEmail" class="form-control" id="email" placeholder="ایمیل خود را وارد نمایید ">
+                                <span asp-validation-for="MessageSenderEmail"></span>
+                            </div>
+                            <div class="form-group">
+                                <input asp-for="MessageSubject" class="form-control" id="subject" placeholder="موضوع پیام را وارد نمایید">
+                                <span asp-validation-for="MessageSubject"></span>
+                            </div>
+                        </div>
+                        <div class="col-lg-7">
+                            <div class="form-group">
+                                <textarea asp-for="MessageDescription" class="form-control different-control w-100" id="message" cols="30" rows="5" placeholder="پیام خود را وارد نمایید"></textarea>
+                                <span asp-validation-for="MessageDescription"></span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-lg-5">
+                            <div class="form-group">
+                                <div class="g-recaptcha" data-sitekey="@Configuration["reCAPTCHA:SiteKey"]"></div>
+                                <span class="field-validation-error recaptcha-error" style="display: none;">لطفا تیک من ربات نیستم را بزنید</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group text-left mt-3">
+                        <button type="submit" class="button button--active button-contactForm">ارسال</button>
+                    </div>
+                    @if (ViewData["SuccessMessage"] != null)
+                    {
+                        <div class="alert alert-success mt-4" role="alert">@ViewData["SuccessMessage"]</div>
+                    }
+                    <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+                </form>
+            </div>
+        </div>
+    </div>
+</section>
+<!-- ================ contact section end ================= -->
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+
+    <script src="https://www.google.com/recaptcha/api.js?hl=fa" async defer></script>
+
+    <script>
+        $("#contactForm").on("submit",
+            function (e) {
+                if (grecaptcha.getResponse() == "") {
+                    e.preventDefault();
+                    $(".recaptcha-error").show();
+                }
+            });
+    </script>
+}

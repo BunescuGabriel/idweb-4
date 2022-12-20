@@ -1,0 +1,78 @@
+﻿@using Aroma_Shop.Application.Utilites
+@model Aroma_Shop.Application.ViewModels.Message.MessageDetailViewModel
+
+@{
+    ViewData["Title"] = "نمایش پیام";
+}
+<div class="h2 mt-3">
+    <h1 class="h2 d-inline">نمایش پیام</h1>
+    <a class="btn btn-warning float-left" asp-controller="Media" asp-action="Messages">بازگشت</a>
+</div>
+<hr>
+<div class="row">
+    <div class="col-lg-10 col-md-11 col-sm-12">
+        <div class="card bg-light mb-3">
+            <div class="card-header h4">پیام</div>
+            <div class="card-body">
+                <div class="d-flex mb-2">
+                    <fieldset disabled="" class="mr-2">
+                        <label class="h6">نام</label>
+                        <input class="form-control" type="text" value="@Model.Message.MessageSenderName" disabled="">
+                    </fieldset>
+                    <fieldset disabled="" class="mr-2">
+                        <label class="h6">ایمیل</label>
+                        <input class="form-control" type="text" value="@Model.Message.MessageSenderEmail" disabled="">
+                    </fieldset>
+                    <fieldset disabled="" class="mr-2">
+                        <label class="h6">تاریخ</label>
+                        <input class="form-control" type="text" value="@Model.Message.SubmitTime.ToSolarWithTime()" disabled="">
+                    </fieldset>
+                </div>
+                <fieldset disabled="" class="mr-2 mb-3">
+                    <label class="h6">موضوع</label>
+                    <input class="form-control" type="text" value="@Model.Message.MessageSubject" disabled="">
+                </fieldset>
+                <fieldset disabled="" class="mr-2">
+                    <label class="h6">شرح</label>
+                    <textarea class="form-control" rows="5" type="text" disabled="">@Model.Message.MessageDescription</textarea>
+                </fieldset>
+            </div>
+        </div>
+        <div class="card bg-light mb-3">
+            @if (!Model.Message.IsReplied)
+            {
+                <div class="card-header h4">ارسال پاسخ</div>
+                <div class="card-body">
+                    <form asp-action="ReplyToMessage">
+                        @{
+                            TempData["messageId"] = Model.Message.MessageId;
+                        }
+                        <div class="form-group">
+                            <textarea class="form-control" rows="5" asp-for="MessageReplyDescription"></textarea>
+                            <span class="text-danger field-validation-valid"></span>
+                            <button type="submit" class="btn btn-block btn-danger mt-4">ارسال</button>
+                        </div>
+                        <div class="alert alert-danger text-left mt-3" role="alert" asp-validation-summary="All"></div>
+                    </form>
+                </div>
+            }
+            else
+            {
+                <div class="card-header h4">پاسخ شما <span class="badge badge-warning messageReplyTime">@Model.MessageSubmitTime.ToSolarWithTime()</span></div>
+                <div class="card-body">
+                    <fieldset disabled="" class="mr-2">
+                        <textarea class="form-control" rows="5" type="text" disabled="" asp-for="MessageReplyDescription"></textarea>
+                        @if (ViewData["SuccessMessage"] != null)
+                        {
+                            <div class="alert alert-success mt-4" role="alert">@ViewData["SuccessMessage"]</div>
+                        }
+                    </fieldset>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

@@ -1,0 +1,223 @@
+﻿@using Aroma_Shop.Application.Utilites
+
+@model Aroma_Shop.Application.ViewModels.Product.OrderViewModel
+
+@{
+    ViewData["Title"] = @ViewData["HeaderTitle"];
+}
+
+<section class="blog-banner-area" id="contact">
+    <div class="container h-100">
+        <div class="blog-banner">
+            <div class="text-center">
+                <h1>@ViewData["HeaderTitle"]</h1>
+                <nav aria-label="breadcrumb" class="banner-breadcrumb">
+                    <ol class="breadcrumb">
+                        <li class="breadcrumb-item"><a class="text-dark" href="/">خانه</a></li>
+                        <li class="breadcrumb-item active" aria-current="page">@ViewData["HeaderTitle"]</li>
+                    </ol>
+                </nav>
+            </div>
+        </div>
+    </div>
+</section>
+<section class="order_details section-margin--small">
+    <div class="container">
+        <p class="text-center billing-alert">@ViewData["Message"]</p>
+        <div class="print-section">
+            <div class="row mb-5">
+                <div class="col-md-6 col-xl-4 mb-4 mb-xl-0">
+                    <div class="confirmation-card">
+                        <h3 class="billing-title">اطلاعات سفارش</h3>
+                        <table class="order-rable">
+                            <tbody>
+                                <tr>
+                                    <td>شناسه سفارش</td>
+                                    <td>: @Model.OrderId</td>
+                                </tr>
+                                <tr>
+                                    <td>تاریخ پرداخت</td>
+                                    <td>: @Model.PaymentTime</td>
+                                </tr>
+                                <tr>
+                                    <td>جمع کل</td>
+                                    <td>: @Model.OrderTotalPrice</td>
+                                </tr>
+                                <tr>
+                                    <td>روش پرداخت</td>
+                                    <td>: @Model.PaymentMethod</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="col-md-6 col-xl-4 mb-4 mb-xl-0">
+                    <div class="confirmation-card">
+                        <h3 class="billing-title">اطلاعات تکمیلی</h3>
+                        <table class="order-rable">
+                            <tbody>
+                                <tr>
+                                    <td>نام</td>
+                                    <td>: @Model.OwnerUser.UserDetails.FirstName</td>
+                                </tr>
+                                <tr>
+                                    <td>نام خانوادگی</td>
+                                    <td>: @Model.OwnerUser.UserDetails.LastName</td>
+                                </tr>
+                                <tr>
+                                    <td>شماره موبایل</td>
+                                    <td>: @Model.OwnerUser.MobileNumber</td>
+                                </tr>
+                                <tr>
+                                    <td>وضعیت سفارش</td>
+                                    <td>: @Model.OrderStatus</td>
+                                </tr>
+                                <tr>
+                                    <td>یادداشت سفارش</td>
+                                    <td>: @(!string.IsNullOrWhiteSpace(Model.OrderNote)?Model.OrderNote:"-")</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="col-md-6 col-xl-4 mb-4 mb-xl-0">
+                    <div class="confirmation-card">
+                        <h3 class="billing-title">آدرس حمل و نقل</h3>
+                        <table class="order-rable">
+                            <tbody>
+                                <tr>
+                                    <td>استان</td>
+                                    <td>: @Model.OwnerUser.UserDetails.UserProvince</td>
+                                </tr>
+                                <tr>
+                                    <td>شهر</td>
+                                    <td>: @Model.OwnerUser.UserDetails.UserCity</td>
+                                </tr>
+                                <tr>
+                                    <td>کد پستی</td>
+                                    <td>: @Model.OwnerUser.UserDetails.UserZipCode</td>
+                                </tr>
+                                <tr>
+                                    <td>آدرس</td>
+                                    <td>: @Model.OwnerUser.UserDetails.UserAddress</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="order_details_table">
+                <div class="d-flex justify-content-between">
+                    <h2>جزئیات سفارش</h2>
+                    <i class="bi bi-printer h5"></i>
+                </div>
+                <div class="table table-responsive-lg table-responsive-sm">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th scope="col">محصول</th>
+                                <th scope="col">تعداد</th>
+                                <th scope="col">جمع قیمت</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var orderInvoiceDetails in Model.OrderInvoicesDetails)
+                            {
+                                <tr>
+                                    <td class="py-2">
+                                        <p>@orderInvoiceDetails.InvoiceDetailsProductName</p>
+                                        @if (!orderInvoiceDetails.IsInvoiceDetailsProductSimple)
+                                        {
+                                            <ul class="orderconfirmation-variations">
+                                                @for (int i = 0; i < orderInvoiceDetails.InvoiceDetailsProductAttributesNames.Count; i++)
+                                                {
+                                                    <li class="text-secondary">@orderInvoiceDetails.InvoiceDetailsProductAttributesNames.ElementAtOrDefault(i) : @orderInvoiceDetails.InvoiceDetailsProductVariationValues.ElementAtOrDefault(i)</li>
+                                                }
+                                            </ul>
+                                        }
+                                    </td>
+                                    <td class="align-middle py-2">
+                                        <h5>x <span class="middle-number d-inline-block">@orderInvoiceDetails.InvoiceDetailsQuantity.ToString("D2")</span></h5>
+                                    </td>
+                                    <td class="align-middle py-2">
+                                        <p>@(orderInvoiceDetails.InvoiceDetailsTotalPrice != 0 ? $"{orderInvoiceDetails.InvoiceDetailsTotalPrice} تومان" : "رایگان")</p>
+                                    </td>
+                                </tr>
+                            }
+                            <tr>
+                                <td class="pb-4"></td>
+                                <td class="pb-4"></td>
+                                <td class="pb-4"></td>
+                            </tr>
+                            @foreach (var discount in Model.Discounts)
+                            {
+                                <tr>
+                                    <td>کد تخفیف</td>
+                                    <td>@discount.DiscountCode</td>
+                                    <td>-@discount.DiscountPrice</td>
+                                </tr>
+                            }
+                            <tr>
+                                <td class="pt-5">
+                                    <h4>حمل و نقل</h4>
+                                </td>
+                                <td class="pt-5">
+                                    <h5></h5>
+                                </td>
+                                <td class="pt-5">
+                                    <p>پس کرایه</p>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <h4>جمع کل</h4>
+                                </td>
+                                <td>
+                                    <h5></h5>
+                                </td>
+                                <td>
+                                    <h4>@Model.OrderTotalPrice</h4>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+@section Scripts
+{
+    <script>
+        $(document).ready(function () {
+            $(document).ready(function () {
+                var numbersElements = $(".middle-number");
+                for (var i = 0; i < numbersElements.length; i++) {
+                    $(numbersElements[i]).text($(numbersElements[i]).text().toEnglishNumbers());
+                }
+            });
+
+            $(".bi-printer").click(function () {
+                var mywindow = window.open('', 'PRINT', 'height=400,width=600');
+
+                mywindow.document.write('<html><head><title>' + "فاکتور فروشگاه آروما" + '</title>');
+                mywindow.document.write('<link rel="stylesheet" href="/vendors/bootstrap/bootstrap-rtl.min.css">');
+                mywindow.document.write('<link rel="stylesheet" href="/vendors/fontawesome/css/all.min.css">');
+                mywindow.document.write('<link rel="stylesheet" href="/vendors/themify-icons/themify-icons.css">');
+                mywindow.document.write('<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.4.0/font/bootstrap-icons.css">');
+                mywindow.document.write('<link rel="stylesheet" href="<link rel="stylesheet" href="/css/style.css">">');
+                mywindow.document.write('</head><body >');
+                mywindow.document.write('<h1>' + "فاکتور فروشگاه آروما" + '</h1>');
+                mywindow.document.write($(".print-section").html());
+                mywindow.document.write('</body></html>');
+
+                mywindow.document.close(); // necessary for IE >= 10
+                mywindow.focus(); // necessary for IE >= 10*/
+
+                mywindow.print();
+                mywindow.close();
+            });
+        });
+    </script>
+}
