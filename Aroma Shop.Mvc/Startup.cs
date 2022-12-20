@@ -122,7 +122,7 @@ namespace Aroma_Shop.Mvc
                     pattern: "{controller=Home}/{action=Index}/{id?}");
             });
             {
-                context.Database.EnsureCreated();
+                context.Database.Migrate();
             }
         }
 
