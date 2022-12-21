@@ -22,6 +22,8 @@ services:
          - db
         volumes:
          - /home/app/
+        environment:
+           ASPNETCORE_ENVIRONMENT: Development
     sqlpad:
         image: sqlpad/sqlpad
         container_name: sqlpad

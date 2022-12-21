@@ -13,10 +13,10 @@ COPY ["Aroma Shop.Data/Aroma Shop.Data.csproj", "Aroma Shop.Data/"]
 RUN dotnet restore "Aroma Shop.Mvc/Aroma Shop.Mvc.csproj"
 COPY . .
 WORKDIR "/src/Aroma Shop.Mvc"
-RUN dotnet build "Aroma Shop.Mvc.csproj" -c Release -o /app/build
+RUN dotnet build "Aroma Shop.Mvc.csproj" -o /app/build
 
 FROM build AS publish
-RUN dotnet publish "Aroma Shop.Mvc.csproj" -c Release -o /app/publish /p:UseAppHost=false
+RUN dotnet publish "Aroma Shop.Mvc.csproj" -o /app/publish /p:UseAppHost=false
 
 FROM base AS final
 WORKDIR /app
