@@ -12,8 +12,7 @@ services:
         volumes:
           - /home/db/  
     aromashop.mvc:
-        build:
-          dockerfile: Aroma Shop.Mvc/Dockerfile
+        image: gbariel/aroma:latest
         container_name: aroma_app
         restart: always
         ports:
