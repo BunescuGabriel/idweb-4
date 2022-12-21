@@ -1,32 +1,36 @@
 version: '3'
 
 services:
-  aromashop.mvc:
-    image: gbariel/aroma:latest
-    container_name: aroma_app
-    ports:
-      - "5656:80"
-    depends_on:
-      - db
-    volumes:
-      - /home/app/
-  db:
-    image: mcr.microsoft.com/mssql/server:2022-latest
-    container_name: db
-    environment:
-        - ACCEPT_EULA=Y
-        - MSSQL_SA_PASSWORD=Gaby12345678
-    ports:
-      - "1433:1433"
-    volumes:
-      - /home/db/
-  sqlpad:
-    image: sqlpad/sqlpad
-    container_name: sqlpad
-    ports:
-      - "3000:3000"
-    environment:
-      SQLPAD_ADMIN: 'admin'
-      SQLPAD_ADMIN_PASSWORD: 'admin'
-    volumes:
-      - /home/sqlpad
+    db:
+        image: mcr.microsoft.com/mssql/server:2022-latest
+        container_name: db
+        environment:
+          - ACCEPT_EULA=Y
+          - MSSQL_SA_PASSWORD=Gaby12345678
+        ports:
+          - "1433:1433"
+        volumes:
+          - /home/db/  
+    aromashop.mvc:
+        build:
+          dockerfile: Aroma Shop.Mvc/Dockerfile
+        container_name: aroma_app
+        restart: always
+        ports:
+         - "5000:80"
+        depends_on:
+         - db
+        volumes:
+         - /home/app/
+        environment:
+           ASPNETCORE_ENVIRONMENT: Development
+    sqlpad:
+        image: sqlpad/sqlpad
+        container_name: sqlpad
+        ports:
+         - "3000:3000"
+        environment:
+           SQLPAD_ADMIN: 'admin'
+           SQLPAD_ADMIN_PASSWORD: 'admin'
+        volumes:
+           - /home/sqlpad
