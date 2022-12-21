@@ -42,7 +42,7 @@ namespace Aroma_Shop.Mvc
 
             services.AddDbContextPool<AppDbContext>(options =>
             {
-                options.UseSqlServer("Data Source=.;Database=Aroma;Integrated Security=true");
+                options.UseSqlServer("Server=db;Database=Aroma;User Id=sa;Password=Gaby12345678;MultipleActiveResultSets=true");
             });
 
             services.AddIdentity<CustomIdentityUser, CustomIdentityRole>(options =>
@@ -121,6 +121,9 @@ namespace Aroma_Shop.Mvc
                     name: "default",
                     pattern: "{controller=Home}/{action=Index}/{id?}");
             });
+            {
+                context.Database.Migrate();
+            }
         }
 
         public static void RegisterServices(IServiceCollection service)
